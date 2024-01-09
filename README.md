@@ -13,4 +13,4 @@
   1. `pyenv local 3.10.11`
 1. run the script
   1. `python setup.py <commit hash or branch name or tag>`
-    1. `python setup.py 7.1.1`
+    1. `python setup.py v7.1.1`

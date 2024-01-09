@@ -21,9 +21,9 @@ def main(commit_hash):
     pip_install_cmd = [os.path.join(venv_dir, "bin", "python"), "-m", "pip", "install", "-U"]
 
     print("Installing dependencies...")
-    run_command(pip_install_cmd + ["./shared-data/python"], cwd=repo_name)
-    run_command(pip_install_cmd + ["./hardware[flex]"], cwd=repo_name)
-    run_command(pip_install_cmd + ["./api"], cwd=repo_name)
+    run_command(pip_install_cmd + ["./opentrons/shared-data/python"], cwd=repo_name)
+    run_command(pip_install_cmd + ["./opentrons/hardware[flex]"], cwd=repo_name)
+    run_command(pip_install_cmd + ["./opentrons/api"], cwd=repo_name)
     run_command(pip_install_cmd + ["pandas==1.4.3"], cwd=repo_name)
 
     print("Setup complete.")
