@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 import venv
@@ -10,6 +11,11 @@ def run_command(command, cwd=None):
 def main(commit_hash):
     repo_url = "https://github.com/Opentrons/opentrons"  # Replace with your repository URL
     repo_name = repo_url.split("/")[-1]
+
+ # Check if the directory exists and delete it
+    if os.path.exists(repo_name):
+        print(f"Deleting existing directory '{repo_name}'...")
+        shutil.rmtree(repo_name)
 
     print("Cloning the repository...")
     run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
