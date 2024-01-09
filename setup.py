@@ -1,20 +1,13 @@
-import os
 import shutil
 import subprocess
 import sys
 import venv
+import os
+from pathlib import Path
 
 def run_command(command, cwd=None):
     print(f"Running command: {' '.join(command)}")
-    subprocess.check_call(command, cwd=cwd)
-
-def is_git_repo(path):
-    """Check if a directory is a Git repository."""
-    try:
-        subprocess.check_call(["git", "-C", path, "status"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    subprocess.check_call(command, cwd=cwd if cwd is None else str(cwd))
 
 def on_rm_error(func, path, exc_info):
     """Error handler for `shutil.rmtree`."""
@@ -29,26 +22,30 @@ def on_rm_error(func, path, exc_info):
 
 def main(commit_hash):
     repo_url = "https://github.com/Opentrons/opentrons"  # Replace with your repository URL
-    repo_name = repo_url.split("/")[-1]
+    repo_name = Path(repo_url.split("/")[-1])
+    current_dir = Path.cwd()
 
-    if os.path.exists(repo_name):
-            print(f"Deleting non-git directory '{repo_name}'...")
-            shutil.rmtree(repo_name, onerror=on_rm_error)
+    repo_path = current_dir / repo_name
+
+    if repo_path.exists() and repo_path.is_dir():
+        print(f"Deleting directory '{repo_path}'...")
+        shutil.rmtree(repo_path, onerror=on_rm_error)
 
     print("Cloning the repository...")
     run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
 
-    print(f"Creating a virtual environment named '{commit_hash}'...")
-    venv_dir = os.path.join(".venv_", commit_hash)  # Venv directory in the current folder
+    venv_dir = current_dir / (".venv_" + commit_hash)
+    print(f"Creating a virtual environment in '{venv_dir}'...")
     venv.create(venv_dir, with_pip=True)
 
-    pip_install_cmd = [os.path.join(venv_dir, "bin", "python"), "-m", "pip", "install", "-U"]
+    pip_path = venv_dir / "bin" / "python"
+    pip_install_cmd = [str(pip_path), "-m", "pip", "install", "-U"]
 
     print("Installing dependencies...")
-    run_command(pip_install_cmd + ["./opentrons/shared-data/python"], cwd=repo_name)
-    run_command(pip_install_cmd + ["./opentrons/hardware[flex]"], cwd=repo_name)
-    run_command(pip_install_cmd + ["./opentrons/api"], cwd=repo_name)
-    run_command(pip_install_cmd + ["pandas==1.4.3"], cwd=repo_name)
+    run_command(pip_install_cmd + [str(repo_path / "shared-data/python")])
+    run_command(pip_install_cmd + [str(repo_path / "hardware[flex]")])
+    run_command(pip_install_cmd + [str(repo_path / "api")])
+    run_command(pip_install_cmd + ["pandas==1.4.3"])
 
     print("Setup complete.")
 
