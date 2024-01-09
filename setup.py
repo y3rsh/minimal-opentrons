@@ -8,17 +8,39 @@ def run_command(command, cwd=None):
     print(f"Running command: {' '.join(command)}")
     subprocess.check_call(command, cwd=cwd)
 
+def is_git_repo(path):
+    """Check if a directory is a Git repository."""
+    try:
+        subprocess.check_call(["git", "-C", path, "status"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def on_rm_error(func, path, exc_info):
+    """Error handler for `shutil.rmtree`."""
+    import stat
+    if not os.access(path, os.W_OK):
+        # Change the file to be writable (stat.S_IWRITE)
+        os.chmod(path, stat.S_IWRITE)
+        # Retry the deletion
+        func(path)
+    else:
+        raise
+
 def main(commit_hash):
     repo_url = "https://github.com/Opentrons/opentrons"  # Replace with your repository URL
     repo_name = repo_url.split("/")[-1]
 
- # Check if the directory exists and delete it
-    if os.path.exists(repo_name):
-        print(f"Deleting existing directory '{repo_name}'...")
-        shutil.rmtree(repo_name)
-
-    print("Cloning the repository...")
-    run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
+    if os.path.exists(repo_name) and is_git_repo(repo_name):
+        print(f"Existing Git repository found in '{repo_name}'. Checking out commit '{commit_hash}'...")
+        run_command(["git", "-C", repo_name, "fetch", "origin", commit_hash])
+        run_command(["git", "-C", repo_name, "checkout", commit_hash])
+    else:
+        if os.path.exists(repo_name):
+            print(f"Deleting non-git directory '{repo_name}'...")
+            shutil.rmtree(repo_name, onerror=on_rm_error)
+        print("Cloning the repository...")
+        run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
 
     print(f"Creating a virtual environment named '{commit_hash}'...")
     venv_dir = os.path.join(".venv_", commit_hash)  # Venv directory in the current folder
