@@ -11,7 +11,7 @@
 
 1. navigate to the directory you want to work in
 1. clone the repo
-    1. `git clone https://github.com/y3rsh/minimal-opentrons.git
+    1. `git clone https://github.com/y3rsh/minimal-opentrons.git`
 1. setup the local version of python with pyenv
     1. `pyenv local 3.10.11`
 1. run the script.  This will create a virtual environment and install the opentrons packages
