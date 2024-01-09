@@ -20,11 +20,17 @@ def on_rm_error(func, path, exc_info):
     else:
         raise
 
+def create_venv(venv_dir):
+    print(f"Creating a virtual environment in '{venv_dir}'...")
+    venv.create(venv_dir, with_pip=True)
+    bin_dir = venv_dir / 'Scripts' if sys.platform == 'win32' else venv_dir / 'bin'
+    return bin_dir
+
 def main(commit_hash):
     repo_url = "https://github.com/Opentrons/opentrons"  # Replace with your repository URL
     repo_name = Path(repo_url.split("/")[-1])
     current_dir = Path.cwd()
-
+    venv_dir = current_dir / (".venv_" + commit_hash)
     repo_path = current_dir / repo_name
 
     if repo_path.exists() and repo_path.is_dir():
@@ -34,11 +40,10 @@ def main(commit_hash):
     print("Cloning the repository...")
     run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
 
-    venv_dir = current_dir / (".venv_" + commit_hash)
+    
     print(f"Creating a virtual environment in '{venv_dir}'...")
-    venv.create(venv_dir, with_pip=True)
-
-    pip_path = venv_dir / "bin" / "python"
+    bin_dir = create_venv(venv_dir)
+    pip_path = bin_dir / "python.exe" if sys.platform == 'win32' else bin_dir / "python"
     pip_install_cmd = [str(pip_path), "-m", "pip", "install", "-U"]
 
     print("Installing dependencies...")
