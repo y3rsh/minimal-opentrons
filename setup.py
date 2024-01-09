@@ -31,16 +31,12 @@ def main(commit_hash):
     repo_url = "https://github.com/Opentrons/opentrons"  # Replace with your repository URL
     repo_name = repo_url.split("/")[-1]
 
-    if os.path.exists(repo_name) and is_git_repo(repo_name):
-        print(f"Existing Git repository found in '{repo_name}'. Checking out commit '{commit_hash}'...")
-        run_command(["git", "-C", repo_name, "fetch", "origin", commit_hash])
-        run_command(["git", "-C", repo_name, "checkout", commit_hash])
-    else:
-        if os.path.exists(repo_name):
+    if os.path.exists(repo_name):
             print(f"Deleting non-git directory '{repo_name}'...")
             shutil.rmtree(repo_name, onerror=on_rm_error)
-        print("Cloning the repository...")
-        run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
+
+    print("Cloning the repository...")
+    run_command(["git", "clone", repo_url, "--depth", "1", "--branch", commit_hash])
 
     print(f"Creating a virtual environment named '{commit_hash}'...")
     venv_dir = os.path.join(".venv_", commit_hash)  # Venv directory in the current folder
